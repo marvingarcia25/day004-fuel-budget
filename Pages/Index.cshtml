@@ -1,0 +1,265 @@
+@page
+@model FuelBudget.Pages.IndexModel
+@{
+    ViewData["Title"] = "NZ Fuel Budget Planner";
+}
+
+<div class="container">
+
+    <header class="site-header">
+        <div class="header-eyebrow">Day 004 &mdash; 1000 Days Challenge</div>
+        <h1 class="site-title"><em>NZ</em> Fuel Budget Planner</h1>
+        <p class="site-meta">Current pump prices &bull; Weekly cost calculator &bull; Data: MBIE</p>
+    </header>
+
+    <!-- PRICE BOARD -->
+    <div class="section-label">Live Pump Prices</div>
+    <div class="price-board" id="priceBoard">
+        <div class="board-head">
+            <span>Region</span>
+            <span>91</span>
+            <span>95</span>
+            <span>Diesel</span>
+        </div>
+        <div id="boardRows">
+            <div class="price-row">
+                <span class="region-name" style="color:var(--text-dim)">Loading&hellip;</span>
+                <span class="price-cell" style="color:var(--text-muted)">-</span>
+                <span class="price-cell" style="color:var(--text-muted)">-</span>
+                <span class="price-cell" style="color:var(--text-muted)">-</span>
+            </div>
+        </div>
+        <div class="board-footer">
+            <span>Click a region to select it</span>
+            <span class="week-label" id="weekLabel">&mdash;</span>
+        </div>
+    </div>
+
+    <!-- CALCULATOR -->
+    <div class="section-label">Your Budget</div>
+    <div class="calc-panel">
+        <div class="toggles-row" id="regionToggles"></div>
+
+        <div class="toggles-row">
+            <button class="toggle-btn active" data-grade="91" onclick="selectGrade('91')">91 Regular</button>
+            <button class="toggle-btn" data-grade="95" onclick="selectGrade('95')">95 Premium</button>
+            <button class="toggle-btn" data-grade="Diesel" onclick="selectGrade('Diesel')">Diesel</button>
+        </div>
+
+        <div class="inputs-grid">
+            <div class="input-block">
+                <label class="input-label">Fuel Efficiency</label>
+                <div class="input-row">
+                    <input type="range" id="effRange" min="4" max="25" step="0.5" value="12" oninput="syncEfficiency(this.value)">
+                    <input type="number" id="effNum" value="12" min="4" max="25" step="0.5" oninput="syncEfficiency(this.value)">
+                    <span class="input-unit">L/100km</span>
+                </div>
+            </div>
+            <div class="input-block">
+                <label class="input-label">Weekly Distance</label>
+                <div class="input-row">
+                    <input type="range" id="kmRange" min="0" max="1000" step="10" value="250" oninput="syncKm(this.value)">
+                    <input type="number" id="kmNum" value="250" min="0" max="2000" step="10" oninput="syncKm(this.value)">
+                    <span class="input-unit">km/week</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="section-label">Your Fuel Cost</div>
+    <div class="results-section">
+        <div class="result-primary">
+            <div class="result-eyebrow">Weekly Cost</div>
+            <div class="result-number">
+                <span class="sym">$</span><span id="weeklyWhole">--</span>
+            </div>
+            <div class="result-context" id="resultContext">&nbsp;</div>
+            <div class="litres-bar-row">
+                <div class="litres-track"><div class="litres-fill" id="litresFill"></div></div>
+                <span class="litres-label" id="litresLabel">&mdash;</span>
+            </div>
+        </div>
+
+        <div class="results-grid">
+            <div class="result-card">
+                <div class="result-card-label">Monthly</div>
+                <div class="result-card-value accent" id="monthlyDisplay">$--</div>
+            </div>
+            <div class="result-card">
+                <div class="result-card-label">Annual</div>
+                <div class="result-card-value" id="annualDisplay">$--</div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <span>Data: MBIE Weekly Fuel Price Monitor</span>
+        <span>Day 004 &mdash; 1000 Days Challenge</span>
+    </footer>
+
+</div>
+
+@section Scripts {
+<script>
+const REGIONS = ['National','Auckland','Wellington','Christchurch','Hamilton','Dunedin'];
+const GRADES  = ['91','95','Diesel'];
+
+let state = {
+    region: 'National',
+    grade:  '91',
+    efficiency: 12,
+    weeklyKm: 250,
+    prices: {}
+};
+
+async function init() {
+    await loadPrices();
+    buildRegionToggles();
+    renderBoardRows();
+    calculate();
+}
+
+async function loadPrices() {
+    try {
+        const res = await fetch('/api/fuel');
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        state.prices = {};
+        data.prices.forEach(p => {
+            if (!state.prices[p.region]) state.prices[p.region] = {};
+            state.prices[p.region][p.grade] = p.pricePerLitre;
+        });
+        document.getElementById('weekLabel').textContent = data.weekLabel;
+    } catch { /* prices stay empty */ }
+}
+
+function renderBoardRows() {
+    const container = document.getElementById('boardRows');
+    container.innerHTML = '';
+    REGIONS.forEach(region => {
+        const row = document.createElement('div');
+        row.className = 'price-row' + (region === state.region ? ' active' : '');
+        row.onclick = () => selectRegion(region);
+
+        const rSpan = document.createElement('span');
+        rSpan.className = 'region-name';
+        rSpan.textContent = region;
+        row.appendChild(rSpan);
+
+        GRADES.forEach(grade => {
+            const cell = document.createElement('span');
+            cell.className = 'price-cell' + (grade === '95' ? ' hi-grade' : '');
+            const price = state.prices[region]?.[grade];
+            cell.textContent = price != null ? '$' + price.toFixed(2) : '-';
+            row.appendChild(cell);
+        });
+
+        container.appendChild(row);
+    });
+}
+
+function buildRegionToggles() {
+    const container = document.getElementById('regionToggles');
+    container.innerHTML = '';
+    REGIONS.forEach(region => {
+        const btn = document.createElement('button');
+        btn.className = 'toggle-btn' + (region === state.region ? ' active' : '');
+        btn.dataset.region = region;
+        btn.textContent = region;
+        btn.onclick = () => selectRegion(region);
+        container.appendChild(btn);
+    });
+}
+
+function selectRegion(region) {
+    state.region = region;
+    document.querySelectorAll('#regionToggles .toggle-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.region === region);
+    });
+    document.querySelectorAll('#boardRows .price-row').forEach((row, i) => {
+        row.classList.toggle('active', REGIONS[i] === region);
+    });
+    calculate();
+}
+
+function selectGrade(grade) {
+    state.grade = grade;
+    document.querySelectorAll('[data-grade]').forEach(b => {
+        b.classList.toggle('active', b.dataset.grade === grade);
+    });
+    calculate();
+}
+
+function syncEfficiency(val) {
+    const v = parseFloat(val) || 12;
+    state.efficiency = v;
+    document.getElementById('effRange').value = v;
+    document.getElementById('effNum').value = v;
+    calculate();
+}
+
+function syncKm(val) {
+    const v = parseInt(val) || 0;
+    state.weeklyKm = v;
+    document.getElementById('kmRange').value = Math.min(v, 1000);
+    document.getElementById('kmNum').value = v;
+    calculate();
+}
+
+let calcTimer = null;
+function calculate() {
+    clearTimeout(calcTimer);
+    calcTimer = setTimeout(doCalculate, 150);
+}
+
+async function doCalculate() {
+    const { region, grade, efficiency, weeklyKm } = state;
+    if (efficiency <= 0 || weeklyKm < 0) return;
+    const url = `/api/fuel/calculate?region=${encodeURIComponent(region)}&grade=${encodeURIComponent(grade)}&efficiency=${efficiency}&weeklyKm=${weeklyKm}`;
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error();
+        const d = await res.json();
+        renderResults(d);
+    } catch { clearResults(); }
+}
+
+function fmt(n) {
+    return '$' + Number(n).toLocaleString('en-NZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function renderResults(d) {
+    document.getElementById('weeklyWhole').textContent =
+        Number(d.weeklyCost).toLocaleString('en-NZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    document.getElementById('monthlyDisplay').textContent = fmt(d.monthlyCost);
+    document.getElementById('annualDisplay').textContent  = fmt(d.annualCost);
+
+    const litres = d.weeklyLitres;
+    document.getElementById('litresLabel').textContent = litres.toFixed(1) + ' L/week';
+    document.getElementById('litresFill').style.width = Math.min(litres / 100 * 100, 100) + '%';
+
+    const tankFills = (d.annualCost / (d.pricePerLitre * 50)).toFixed(0);
+    const ctx = document.getElementById('resultContext');
+    ctx.innerHTML = '';
+    const s = document.createElement('strong');
+    s.textContent = tankFills + ' tank fills';
+    ctx.appendChild(s);
+    ctx.appendChild(document.createTextNode(
+        ' per year at ' + state.region + ' ' + state.grade +
+        ' prices ($' + Number(d.pricePerLitre).toFixed(2) + '/L)'
+    ));
+}
+
+function clearResults() {
+    document.getElementById('weeklyWhole').textContent = '--';
+    document.getElementById('monthlyDisplay').textContent = '$--';
+    document.getElementById('annualDisplay').textContent  = '$--';
+    document.getElementById('litresFill').style.width = '0%';
+    document.getElementById('litresLabel').textContent = '—';
+    document.getElementById('resultContext').innerHTML = '&nbsp;';
+}
+
+init();
+</script>
+}
