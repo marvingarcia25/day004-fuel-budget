@@ -38,9 +38,9 @@
     <!-- CALCULATOR -->
     <div class="section-label">Your Budget</div>
     <div class="calc-panel">
-        <div class="toggles-row" id="regionToggles"></div>
+        <div class="region-strip" id="regionToggles"></div>
 
-        <div class="toggles-row">
+        <div class="grade-toggles">
             <button class="toggle-btn active" data-grade="91" onclick="selectGrade('91')">91 Regular</button>
             <button class="toggle-btn" data-grade="95" onclick="selectGrade('95')">95 Premium</button>
             <button class="toggle-btn" data-grade="Diesel" onclick="selectGrade('Diesel')">Diesel</button>
@@ -98,6 +98,15 @@
         <span>Day 004 &mdash; 1000 Days Challenge</span>
     </footer>
 
+</div>
+
+<!-- STICKY COST BAR (mobile only) -->
+<div class="sticky-cost" id="stickyCost">
+    <div>
+        <div class="sticky-label">Weekly Cost</div>
+        <div class="sticky-meta" id="stickyMeta">&nbsp;</div>
+    </div>
+    <span class="sticky-value" id="stickyValue">$--</span>
 </div>
 
 @section Scripts {
@@ -230,8 +239,8 @@ function fmt(n) {
 }
 
 function renderResults(d) {
-    document.getElementById('weeklyWhole').textContent =
-        Number(d.weeklyCost).toLocaleString('en-NZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const weekly = Number(d.weeklyCost).toLocaleString('en-NZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    document.getElementById('weeklyWhole').textContent = weekly;
     document.getElementById('monthlyDisplay').textContent = fmt(d.monthlyCost);
     document.getElementById('annualDisplay').textContent  = fmt(d.annualCost);
 
@@ -249,6 +258,9 @@ function renderResults(d) {
         ' per year at ' + state.region + ' ' + state.grade +
         ' prices ($' + Number(d.pricePerLitre).toFixed(2) + '/L)'
     ));
+
+    document.getElementById('stickyValue').textContent = '$' + weekly;
+    document.getElementById('stickyMeta').textContent = state.region + ' · ' + state.grade;
 }
 
 function clearResults() {
@@ -258,6 +270,8 @@ function clearResults() {
     document.getElementById('litresFill').style.width = '0%';
     document.getElementById('litresLabel').textContent = '—';
     document.getElementById('resultContext').innerHTML = '&nbsp;';
+    document.getElementById('stickyValue').textContent = '$--';
+    document.getElementById('stickyMeta').textContent = ' ';
 }
 
 init();
