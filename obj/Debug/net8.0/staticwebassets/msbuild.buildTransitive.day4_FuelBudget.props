@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\buildMultiTargeting\day4_FuelBudget.props" />
-</Project>
