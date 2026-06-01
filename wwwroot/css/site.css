@@ -1,18 +1,18 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-    --bg:           #0d0d0d;
-    --panel:        #151515;
-    --panel2:       #1c1c1c;
-    --amber:        #ff6b00;
-    --amber-dim:    rgba(255, 107, 0, 0.09);
-    --amber-glow:   rgba(255, 107, 0, 0.35);
-    --yellow:       #ffd60a;
-    --text:         #ece6d8;
-    --text-dim:     #8a8a8a;
-    --text-muted:   #606060;
-    --border:       rgba(255, 107, 0, 0.16);
-    --border-hi:    rgba(255, 107, 0, 0.42);
+    --bg:           #f5f4f1;
+    --panel:        #ffffff;
+    --panel2:       #eceae6;
+    --amber:        #c95200;
+    --amber-dim:    rgba(201, 82, 0, 0.08);
+    --amber-glow:   rgba(201, 82, 0, 0.25);
+    --yellow:       #92400e;
+    --text:         #1a1a1a;
+    --text-dim:     #525252;
+    --text-muted:   #6b6b6b;
+    --border:       rgba(0, 0, 0, 0.10);
+    --border-hi:    rgba(201, 82, 0, 0.40);
     --font-display: 'Big Shoulders Display', sans-serif;
     --font-mono:    'JetBrains Mono', monospace;
 }
@@ -32,7 +32,7 @@ body::after {
     content: '';
     position: fixed;
     inset: 0;
-    background: radial-gradient(ellipse 80% 50% at 50% -5%, rgba(255,107,0,0.05) 0%, transparent 60%);
+    background: radial-gradient(ellipse 80% 50% at 50% -5%, rgba(201,82,0,0.04) 0%, transparent 60%);
     pointer-events: none;
     z-index: 0;
 }
@@ -150,7 +150,7 @@ body::after {
     display: grid;
     grid-template-columns: 1fr 60px 60px 60px;
     padding: 0.75rem 0.9rem; /* taller for touch */
-    border-bottom: 1px solid rgba(255,107,0,0.05);
+    border-bottom: 1px solid rgba(0,0,0,0.06);
     cursor: pointer;
     transition: background 0.12s;
     position: relative;
@@ -343,7 +343,7 @@ input[type="range"]:active::-webkit-slider-thumb {
     box-shadow: 0 0 18px var(--amber-glow);
 }
 
-input[type="range"]::-webkit-slider-runnable-track { background: var(--panel2); height: 4px; border-radius: 2px; }
+input[type="range"]::-webkit-slider-runnable-track { background: rgba(0,0,0,0.15); height: 4px; border-radius: 2px; }
 
 @media (min-width: 600px) {
     input[type="range"] { height: 2px; }
@@ -395,7 +395,7 @@ input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
     content: '';
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse 65% 45% at 50% -5%, rgba(255,107,0,0.07) 0%, transparent 70%);
+    background: radial-gradient(ellipse 65% 45% at 50% -5%, rgba(201,82,0,0.05) 0%, transparent 70%);
     pointer-events: none;
 }
 
